@@ -9,22 +9,23 @@ export class AuthController {
 
     @Post("/user/signup")
     signup(){
-
+        this.AuthService.signupLogic();
     }
 
     
     @Post("/user/login")
     login(){
-        
+        this.AuthService.loginLogic()
     }
 
     @Post("/logout")
     logout(){
-
+        this.AuthService.logoutLogic()
     }
 
     @Post("/refreshtoken")
     refresh(){
-        
+        this.AuthService.refreshToken()
+
     }
 }
