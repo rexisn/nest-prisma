@@ -1,4 +1,6 @@
-import { Body, Controller, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Patch, Post,Req, UseGuards } from '@nestjs/common';
+import {Request  } from 'express'
+import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { AuthDTO } from './dto/user.dto';
 import { Tokens } from './types';
@@ -9,20 +11,25 @@ export class AuthController {
         this.AuthService = AuthService
     }
 
-    @Post("user/signup")
+    @Post('user/signup')
+    @HttpCode(HttpStatus.CREATED)
     signup(@Body() dto: AuthDTO): Promise<Tokens | Error> {
         return this.AuthService.signupLogic(dto);
     }
 
-    @Post("user/login")
+    @Post('users/login')
+    @HttpCode(HttpStatus.OK)
     login(@Body() dto: AuthDTO) : Promise<Tokens>{
         return this.AuthService.login(dto)
 
     }
 
-    @Patch("logout/:id")
-    logout(@Param() id : number){
-        return this.AuthService.logout(id) ;
+    @Patch('logout/:id')
+    @UseGuards(AuthGuard("jwt"))
+    @HttpCode(HttpStatus.OK)
+    logout(@Req() req : Request) {
+        const user = req.user
+        return this.AuthService.logout(user["sub"]) ;
         
     }
 }   

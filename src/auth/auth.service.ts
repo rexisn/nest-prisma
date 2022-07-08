@@ -76,7 +76,7 @@ export class AuthService {
             where :{
                 id : id ,             },
             data : {
-                hashedRt : null
+                hashedRt : ""
             }
         })
         return { status : 200  , message : "Logged out successfully"}
