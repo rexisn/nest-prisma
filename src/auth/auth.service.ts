@@ -68,6 +68,20 @@ export class AuthService {
         // return tokens
     }
 
+
+
+    //logout the user by removing the refresh token and the access token
+    async logout(id : number){
+        await this.prisma.user.update({
+            where :{
+                id : id ,             },
+            data : {
+                hashedRt : null
+            }
+        })
+        return { status : 200  , message : "Logged out successfully"}
+    }
+
     //io_functions ==> utils
     async getTokens(userId: number, email: string) {
         const [accessToken, refreshToken] = await Promise.all([
