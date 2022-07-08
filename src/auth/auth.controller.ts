@@ -10,9 +10,15 @@ export class AuthController {
     }
 
     @Post("/user/signup")
-    signup(@Body() dto: AuthDTO): Promise<Tokens> {
+    signup(@Body() dto: AuthDTO): Promise<Tokens | Error> {
         return this.AuthService.signupLogic(dto);
     }
 
+    @Post("/user/login")
+    login(@Body() dto: AuthDTO) : Promise<Tokens>{
+        return this.AuthService.login(dto)
 
-}
+    }
+
+
+}   

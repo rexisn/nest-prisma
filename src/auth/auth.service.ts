@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AuthDTO } from './dto/user.dto';
 import * as bcrypt from 'bcrypt'
 import { Tokens } from './types';
 import { JwtService } from '@nestjs/jwt';
 import { env } from 'process';
+import { NotFoundError } from 'rxjs';
 
 
 
@@ -16,9 +17,15 @@ export class AuthService {
         private jwtService: JwtService) {
     }
 
-    async signupLogic(dto: AuthDTO): Promise<Tokens> {
+    //signup with email and password
+    async signupLogic(dto: AuthDTO): Promise<Tokens |Error > {
+        const emialMatch  = await this.prisma.user.findUnique({
+            where : {
+                email : dto.email
+            }
+        })
+        if(emialMatch) throw new ConflictException("Email already registered try login")
         const hash = await this.hashData(dto.password)
-
         const newUser = await this.prisma.user.create({
             data: {
                 email: dto.email,
@@ -27,10 +34,10 @@ export class AuthService {
             }
         })
         const tokens = await this.getTokens(newUser.id, newUser.email)
-        await this.updateToken(newUser.id , tokens.refresh_token)
+        await this.updateToken(newUser.id, tokens.refresh_token)
         return tokens
     }
-    async updateToken(id: number, refreshToken: string) {
+    protected async updateToken(id: number, refreshToken: string) {
         const hash = await this.hashData(refreshToken)
         return this.prisma.user.update({
             where: {
@@ -40,6 +47,25 @@ export class AuthService {
                 hashedRt: hash
             }
         })
+    }
+
+    //login with email and password
+    async login(dto: AuthDTO) : Promise<Tokens> {
+        const user = await this.prisma.user.findUnique({
+            where: {
+                email: dto.email
+            }
+        })
+        if (!user) throw new NotFoundException("Such user doesn't exist")
+        const passwordmatches = await bcrypt.compare(dto.password, user.hash)
+        if (!passwordmatches) throw new NotFoundException("Such user not found")
+
+        const tokens = await this.getTokens(user.id, user.email)
+        this.updateToken(user.id, tokens.refresh_token)
+
+        return tokens;
+
+        // return tokens
     }
 
     //io_functions ==> utils

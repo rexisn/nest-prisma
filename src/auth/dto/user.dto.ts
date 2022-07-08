@@ -9,4 +9,4 @@ export class  AuthDTO {
     @IsNotEmpty()
     @IsString()
     public password : string
-}
+}   
