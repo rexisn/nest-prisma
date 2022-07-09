@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotAcceptableException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AuthDTO } from './dto/user.dto';
 import * as bcrypt from 'bcrypt'
@@ -82,21 +82,39 @@ export class AuthService {
         return { status : 200  , message : "Logged out successfully"}
     }
 
+    //refresh tokens 
+    async refresh(id : number , rt : string): Promise<Tokens>{
+        const user = await this.prisma.user.findUnique({
+            where : {
+                id : id
+            }
+        })
+
+        if(!user) throw new NotFoundException("Access Denied") ;
+        const rtMatches = await bcrypt.compare(rt , user.hashedRt)
+        if(!rtMatches) throw new NotAcceptableException("Access Denied")
+ 
+        const tokens = await this.getTokens(user.id, user.email)
+        this.updateToken(user.id, tokens.refresh_token)
+
+        return tokens
+    }
+
     //io_functions ==> utils
     async getTokens(userId: number, email: string) {
         const [accessToken, refreshToken] = await Promise.all([
             this.jwtService.signAsync({
-                sub: userId,
+                id: userId,
                 email: email
             }, {
                 secret: env.AT_SECRET_KEY,
                 expiresIn: 60 * 15
             }),
             this.jwtService.signAsync({
-                sub: userId,
+                id: userId,
                 email: email
             }, {
-                secret: env.AT_SECRET_KEY,
+                secret: env.RT_SECRET_KEY,
                 expiresIn: 60 * 60 * 24
             })
         ])

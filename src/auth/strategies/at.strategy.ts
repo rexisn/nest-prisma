@@ -10,9 +10,6 @@ export class AtStrategy extends PassportStrategy(Strategy, "jwt") {
             ignoreExpiration: false,
             secretOrKey: env.AT_SECRET_KEY
         })
-
-
-
     }
 
     validate(payload  : JwtPayload) {

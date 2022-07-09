@@ -29,7 +29,27 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     logout(@Req() req : Request) {
         const user = req.user
-        return this.AuthService.logout(user["sub"]) ;
+        return this.AuthService.logout(user["id"]) ;
         
+    }
+
+
+    // @Patch('refresh')
+    // @UseGuards(AuthGuard('jwt-refresh'))
+    // refresh(@Req() req : Request){
+    //     const user = req.user
+    //     console.log(user)
+    //     return  this.AuthService.refresh(user["id"] , user["refreshtoken"])
+
+    // }
+
+    
+    @Patch('refresh')
+    @UseGuards(AuthGuard('jwt-refresh'))
+    refresh(@Req() req : Request){
+        const user = req.user
+        console.log(user)
+        return  this.AuthService.refresh(user["id"] , user["refreshtoken"])
+
     }
 }   
